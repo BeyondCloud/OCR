@@ -46,6 +46,8 @@ for img_file in (CROP_DIR / "stack_size").rglob("*.jpg"):
             bb = ""
         elif "All" in results:
             bb = "All-in"
+        elif "Sit" in results:
+            bb = "Sitting Out"
         else:
             bb = re.search(r'(.*?)BB', results).group(1).strip()
             assert(is_number(bb))

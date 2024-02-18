@@ -3,7 +3,7 @@ import json
 import os
 from pathlib import Path
 
-image = cv2.imread("resources/btn_U.png")
+image = cv2.imread("resources/btn_B.png")
 RES_DIR = Path("debug_crop")
 with open('box.json', newline='') as file:
     data = json.load(file)
