@@ -35,7 +35,7 @@ PLAYERS_NAME = data["stack_ori"].keys()
   13 Raw line. Treat the image as a single text line,
 """
 
-CFG_STR = "--psm 1" # 1 3 4 5 11 12
+CFG_STR = "--psm 7" #
 CFG_CHR = "--psm 9" # 8 9 13  : 8 13 bad result
 """
 Extract bet size
@@ -44,14 +44,15 @@ bets = {}
 for img_file in (CROP_DIR / "bet_size").rglob("*.jpg"):
     who = img_file.stem
     image = cv2.imread(str(img_file))
-    results = pytesseract.image_to_string(image, config=CFG_STR)
     bb = ""
-    try:
-        if results != "":
-            bb = re.search(r'(.*?)BB', results).group(1).strip()
-            assert(is_number(bb))
-    except:
-        breakpoint()
+    if image.mean() > 5:
+        results = pytesseract.image_to_string(image, config=CFG_STR)
+        try:
+            if results != "":
+                bb = re.search(r'(.*?)BB', results).group(1).strip()
+                assert(is_number(bb))
+        except:
+            breakpoint()
     bets[who] = bb
 
 extracted_info["bets"] = bets
@@ -64,20 +65,22 @@ stacks = {}
 for img_file in (CROP_DIR / "stack_size").rglob("*.jpg"):
     who = img_file.stem
     image = cv2.imread(str(img_file))
-    results = pytesseract.image_to_string(image, config=CFG_STR)
-    results = results.replace("\n"," ")
-    try:
-        if results == "":
-            bb = ""
-        elif "All" in results:
-            bb = "All-in"
-        elif "Sit" in results:
-            bb = "Sitting Out"
-        else:
-            bb = re.search(r'(.*?)BB', results).group(1).strip()
-            assert(is_number(bb))
-    except:
-        breakpoint()
+    bb = ""
+    if image.mean() > 5:
+        results = pytesseract.image_to_string(image, config=CFG_STR)
+        results = results.replace("\n"," ")
+        try:
+            if results == "":
+                bb = ""
+            elif "All" in results:
+                bb = "All-in"
+            elif "Sit" in results:
+                bb = "Sitting Out"
+            else:
+                bb = re.search(r'(.*?)BB', results).group(1).strip()
+                assert(is_number(bb))
+        except:
+            breakpoint()
     stacks[who] = bb
 extracted_info["stacks"] = stacks
 
@@ -126,6 +129,8 @@ Extract hards
 hands = []
 for img_file in sorted((CROP_DIR / "hands").rglob("*.jpg")):
     image = cv2.imread(str(img_file))
+    if image.mean() < 5:
+        break
     suit = img_file.stem.split("_")[-1]
     results = pytesseract.image_to_string(image, config=CFG_CHR).strip()
     if results == "":
