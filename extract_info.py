@@ -10,6 +10,7 @@ def is_number(string):
     return string.replace(".", "").isnumeric()
 
 CROP_DIR = Path("debug_crop")
+extracted_info = {}
 
 with open('box.json', newline='') as file:
     data = json.load(file)
@@ -39,24 +40,29 @@ CFG_CHR = "--psm 9" # 8 9 13  : 8 13 bad result
 """
 Extract bet size
 """
+bets = {}
 for img_file in (CROP_DIR / "bet_size").rglob("*.jpg"):
+    who = img_file.stem
     image = cv2.imread(str(img_file))
     results = pytesseract.image_to_string(image, config=CFG_STR)
+    bb = ""
     try:
-        if results == "":
-            bb = ""
-        else:
+        if results != "":
             bb = re.search(r'(.*?)BB', results).group(1).strip()
             assert(is_number(bb))
     except:
         breakpoint()
-    with open(img_file.with_suffix('.txt'), "w") as f:
-        f.write(bb)
+    bets[who] = bb
+
+extracted_info["bets"] = bets
+
 
 """
 Extract stack size
 """
+stacks = {}
 for img_file in (CROP_DIR / "stack_size").rglob("*.jpg"):
+    who = img_file.stem
     image = cv2.imread(str(img_file))
     results = pytesseract.image_to_string(image, config=CFG_STR)
     results = results.replace("\n"," ")
@@ -72,8 +78,9 @@ for img_file in (CROP_DIR / "stack_size").rglob("*.jpg"):
             assert(is_number(bb))
     except:
         breakpoint()
-    with open(img_file.with_suffix('.txt'), "w") as f:
-        f.write(bb)
+    stacks[who] = bb
+extracted_info["stacks"] = stacks
+
 
 """
 Extract pot size
@@ -82,9 +89,7 @@ image = cv2.imread(str(CROP_DIR/"pot.jpg"))
 results =pytesseract.image_to_string(image, config=CFG_STR)
 bb = re.search(r':(.*?)BB', results).group(1).strip()
 assert(is_number(bb))
-with open( CROP_DIR/"pot.txt", "w") as f:
-    f.write(bb)
-
+extracted_info["pot"] = bb
 
 """
 Extract btn position
@@ -98,13 +103,12 @@ for img_file in (CROP_DIR / "btn").rglob("*.jpg"):
     if m > max_sum:
         max_sum = m
         btn = name
-with open( CROP_DIR/"btn.txt", "w") as f:
-    f.write(btn)
+extracted_info["btn"] = btn
 
 """
 Extract board
 """
-res = []
+board = []
 for img_file in (CROP_DIR / "board").rglob("*.jpg"):
     image = cv2.imread(str(img_file))
     suit = img_file.stem.split("_")[-1]
@@ -112,6 +116,8 @@ for img_file in (CROP_DIR / "board").rglob("*.jpg"):
     if results == "":
         continue
     else:
-        res.append( f"{results}{suit}")
-with open(CROP_DIR / "board/cards.json", 'w') as f:
-    json.dump(res, f, indent=4, sort_keys=True)
+        board.append( f"{results}{suit}")
+extracted_info["board"] = board
+
+with open(CROP_DIR / "info.json", 'w') as f:
+    json.dump(extracted_info, f, indent=4,sort_keys=True)
