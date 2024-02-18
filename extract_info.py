@@ -119,5 +119,19 @@ for img_file in (CROP_DIR / "board").rglob("*.jpg"):
         board.append( f"{results}{suit}")
 extracted_info["board"] = board
 
+"""
+Extract hards
+"""
+hands = []
+for img_file in (CROP_DIR / "hands").rglob("*.jpg"):
+    image = cv2.imread(str(img_file))
+    suit = img_file.stem.split("_")[-1]
+    results = pytesseract.image_to_string(image, config=CFG_CHR).strip()
+    if results == "":
+        continue
+    else:
+        hands.append( f"{results}{suit}")
+extracted_info["hands"] = hands
+
 with open(CROP_DIR / "info.json", 'w') as f:
     json.dump(extracted_info, f, indent=4,sort_keys=True)

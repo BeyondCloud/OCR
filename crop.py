@@ -3,10 +3,11 @@ import json
 import os
 import numpy as np
 from pathlib import Path
+import shutil
 
-
-image = cv2.imread("resources/btn_UR.png")
-image_gray = cv2.imread("resources/btn_UR.png", 0)
+target_image = "resources/KTo.png"
+image = cv2.imread(target_image)
+image_gray = cv2.imread(target_image, 0)
 
 RES_DIR = Path("debug_crop")
 def pix2suit(pixel) -> str:
@@ -25,12 +26,14 @@ def pix2suit(pixel) -> str:
 with open('box.json', newline='') as file:
     data = json.load(file)
 
-if not os.path.isdir(RES_DIR):
-    os.mkdir(RES_DIR)
-    os.mkdir(RES_DIR / "stack_size")
-    os.mkdir(RES_DIR / "bet_size")
-    os.mkdir(RES_DIR / "btn")
-    os.mkdir(RES_DIR / "board")
+if os.path.isdir(RES_DIR):
+    shutil.rmtree(RES_DIR)
+os.mkdir(RES_DIR)
+os.mkdir(RES_DIR / "stack_size")
+os.mkdir(RES_DIR / "bet_size")
+os.mkdir(RES_DIR / "btn")
+os.mkdir(RES_DIR / "board")
+os.mkdir(RES_DIR / "hands")
 
 
 PLAYERS_NAME = data["stack_ori"].keys()
@@ -99,3 +102,11 @@ for i, card in enumerate(data["board"]):
     suit = pix2suit(image[y,x])
     cropped_image = image_th[ y:y+h, x : x+w]
     cv2.imwrite(f"{RES_DIR}/board/{i}_{suit}.jpg", cropped_image)
+
+# crop hands
+w,h = data["hands_wh"][0], data["hands_wh"][1]
+for i, card in enumerate(data["hands"]):
+    x, y = card[0], card[1]
+    suit = pix2suit(image[y,x])
+    cropped_image = image_th[ y:y+h, x : x+w]
+    cv2.imwrite(f"{RES_DIR}/hands/{i}_{suit}.jpg", cropped_image)
