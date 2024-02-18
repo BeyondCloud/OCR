@@ -17,13 +17,31 @@ with open('box.json', newline='') as file:
 PLAYERS_NAME = data["stack_ori"].keys()
 
 # checkout https://www.cnblogs.com/pyweb/p/11340357.html
-image_to_string_cfg = "--psm 1" # 1 3 4 5 11 12
+"""
+  0 Orientation and script detection (OSD) only.
+  1 Automatic page segmentation with OSD.
+  2 Automatic page segmentation, but no OSD, or OCR.
+  3 Fully automatic page segmentation, but no OSD. (Default)
+  4 Assume a single column of text of variable sizes.
+  5 Assume a single uniform block of vertically aligned text.
+  6 Assume a single uniform block of text.
+  7 Treat the image as a single text line.
+  8 Treat the image as a single word.
+  9 Treat the image as a single word in a circle.
+  10 Treat the image as a single character.
+  11 Sparse text. Find as much text as possible in no particular order.
+  12 Sparse text with OSD.
+  13 Raw line. Treat the image as a single text line,
+"""
+
+CFG_STR = "--psm 1" # 1 3 4 5 11 12
+CFG_CHR = "--psm 9" # 8 9 13  : 8 13 bad result
 """
 Extract bet size
 """
 for img_file in (CROP_DIR / "bet_size").rglob("*.jpg"):
     image = cv2.imread(str(img_file))
-    results = pytesseract.image_to_string(image, config=image_to_string_cfg)
+    results = pytesseract.image_to_string(image, config=CFG_STR)
     try:
         if results == "":
             bb = ""
@@ -40,7 +58,8 @@ Extract stack size
 """
 for img_file in (CROP_DIR / "stack_size").rglob("*.jpg"):
     image = cv2.imread(str(img_file))
-    results = pytesseract.image_to_string(image, config=image_to_string_cfg)
+    results = pytesseract.image_to_string(image, config=CFG_STR)
+    results = results.replace("\n"," ")
     try:
         if results == "":
             bb = ""
@@ -60,7 +79,7 @@ for img_file in (CROP_DIR / "stack_size").rglob("*.jpg"):
 Extract pot size
 """
 image = cv2.imread(str(CROP_DIR/"pot.jpg"))
-results =pytesseract.image_to_string(image, config=image_to_string_cfg)
+results =pytesseract.image_to_string(image, config=CFG_STR)
 bb = re.search(r':(.*?)BB', results).group(1).strip()
 assert(is_number(bb))
 with open( CROP_DIR/"pot.txt", "w") as f:
@@ -70,14 +89,29 @@ with open( CROP_DIR/"pot.txt", "w") as f:
 """
 Extract btn position
 """
-max_mean = 0
+max_sum = 0
 btn = None
 for img_file in (CROP_DIR / "btn").rglob("*.jpg"):
     name = img_file.stem
     image = cv2.imread(str(img_file))
-    m = image.mean()
-    if m > max_mean:
-        max_mean = m
+    m = image.sum()
+    if m > max_sum:
+        max_sum = m
         btn = name
 with open( CROP_DIR/"btn.txt", "w") as f:
     f.write(btn)
+
+"""
+Extract board
+"""
+res = []
+for img_file in (CROP_DIR / "board").rglob("*.jpg"):
+    image = cv2.imread(str(img_file))
+    suit = img_file.stem.split("_")[-1]
+    results = pytesseract.image_to_string(image, config=CFG_CHR).strip()
+    if results == "":
+        continue
+    else:
+        res.append( f"{results}{suit}")
+with open(CROP_DIR / "board/cards.json", 'w') as f:
+    json.dump(res, f, indent=4, sort_keys=True)
