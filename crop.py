@@ -45,7 +45,8 @@ x, y = data["ori"][0], data["ori"][1]
 cropped_image = image[ y:y+h, x: x+w]
 cv2.imwrite(f"{RES_DIR}/cropped.jpg", cropped_image)
 ret, image_th = cv2.threshold(image_gray, 127, 255, cv2.THRESH_BINARY)
-cv2.imwrite(f"{RES_DIR}/thres.jpg", image_th)
+
+cv2.imwrite(f"{RES_DIR}/cropped_thres.jpg", image_th[y:y+h, x: x+w])
 
 
 
