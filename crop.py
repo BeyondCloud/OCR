@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 import shutil
 
-target_image = "resources/KTo.png"
+target_image = "resources/all_bet.png"
 image = cv2.imread(target_image)
 image_gray = cv2.imread(target_image, 0)
 
@@ -101,6 +101,8 @@ for i, card in enumerate(data["board"]):
     x, y = card[0], card[1]
     suit = pix2suit(image[y,x])
     cropped_image = image_th[ y:y+h, x : x+w]
+    if cropped_image.sum() == 0:
+        continue
     cv2.imwrite(f"{RES_DIR}/board/{i}_{suit}.jpg", cropped_image)
 
 # crop hands
