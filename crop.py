@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 import shutil
 
-target_image = "resources/btn_U.png"
+target_image = "resources/KTo.png"
 image = cv2.imread(target_image)
 image_gray = cv2.imread(target_image, 0)
 

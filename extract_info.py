@@ -67,8 +67,12 @@ for img_file in (CROP_DIR / "stack_size").rglob("*.jpg"):
     image = cv2.imread(str(img_file))
     bb = ""
     if image.mean() > 5:
-        results = pytesseract.image_to_string(image, config=CFG_STR)
-        results = results.replace("\n"," ")
+        # bad psm (empty result): 1, 3, 4, 7, 11, 12
+        results = pytesseract.image_to_string(image, config= "--psm 6")
+        for token in ["\n","—","-"]:
+            results = results.replace(token," ")
+        # if who == "UR":
+        #     breakpoint()
         try:
             if results == "":
                 bb = ""
@@ -115,7 +119,8 @@ board = []
 for img_file in sorted((CROP_DIR / "board").rglob("*.jpg")):
     image = cv2.imread(str(img_file))
     suit = img_file.stem.split("_")[-1]
-    results = pytesseract.image_to_string(image, config=CFG_CHR).strip()
+    # psm 7 is bad
+    results = pytesseract.image_to_string(image, config= "--psm 6").strip()
     if results == "":
         continue
     else:
@@ -124,7 +129,7 @@ for img_file in sorted((CROP_DIR / "board").rglob("*.jpg")):
 extracted_info["board"] = board
 
 """
-Extract hards
+Extract hands
 """
 hands = []
 for img_file in sorted((CROP_DIR / "hands").rglob("*.jpg")):
@@ -133,6 +138,10 @@ for img_file in sorted((CROP_DIR / "hands").rglob("*.jpg")):
         break
     suit = img_file.stem.split("_")[-1]
     results = pytesseract.image_to_string(image, config=CFG_CHR).strip()
+    if results not in ["2","3","4","5","6","7","8","9","10","J","Q","K","A"]:
+        break
+    if results == "10":
+        results = "T"
     if results == "":
         continue
     else:
